@@ -7,6 +7,12 @@ class UsuarioBaseDTO(BaseDTO):
         self.email = email
 
 
+class UsuarioCreateDTO(UsuarioBaseDTO):
+    def __init__(self, name, email, senha):
+        super().__init__(name, email)
+        self.senha = senha
+
+
 class UsuarioLoginDTO(UsuarioBaseDTO):
     def __init__(self, name, email, token):
         super().__init__(name, email)

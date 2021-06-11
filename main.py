@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_restx import Api
+from flask_cors import CORS
 import config
 from controllers.LoginController import login_controller
 from controllers.LoginController import api as ns_login
@@ -7,6 +8,8 @@ from controllers.UsuarioController import usuario_controller
 from controllers.UsuarioController import api as ns_usuario
 
 app = Flask(__name__)
+
+CORS(app)
 
 api = Api(app
           , version="1.0"

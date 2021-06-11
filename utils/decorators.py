@@ -5,6 +5,7 @@ from flask import request, Response
 
 from dtos.ErroDTO import ErroDTO
 from services import JWTservice
+from services.UsuarioService import UsuarioService
 
 
 def token_required(func):
@@ -22,7 +23,12 @@ def token_required(func):
             token = str(headers['Authorization']).replace("Bearer ", "")
 
             user_id = JWTservice.decodificar_token(token)
-            kwargs['user_id'] = user_id
+
+            user = UsuarioService().filterById(user_id)
+            if not user:
+                return Response(ErroDTO(401, "Usuário inválido!").dumps(), status=401, mimetype='application/json')
+
+            kwargs['user'] = user
 
         except jwt.ExpiredSignatureError:
             return Response(ErroDTO(401, "Token expirado!").dumps(), status=401, mimetype='application/json')

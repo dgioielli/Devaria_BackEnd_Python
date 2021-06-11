@@ -1,10 +1,12 @@
 from flask import Blueprint, request, Response
 from flask_restx import Namespace, Resource, fields
 
+
 import config
 from dtos.ErroDTO import ErroDTO
 from dtos.UsuarioDTO import UsuarioLoginDTO
 from services import JWTservice
+from services.UsuarioService import UsuarioService
 
 login_controller = Blueprint("login_controller", __name__)
 
@@ -33,14 +35,27 @@ class Login(Resource):
         try:
             # receber os parâmetros do body da requisição
             body = request.get_json()
-            if not body or 'login' not in body or 'senha' not in body:
-                return Response(ErroDTO(400, 'Parâmetros de entrada inválido').dumps(), status=400, mimetype='application/json')
 
-            if body['login'] == config.LOGIN_TESTE and body['senha'] == config.SENHA_TESTE:
-                token = JWTservice.gerar_token(1)
-                return Response(UsuarioLoginDTO("admin", body['login'], token).dumps(), status=200, mimetype='application/json')
+            erros = []
 
-            return Response(ErroDTO(401, 'login ou senha incorreto').dumps(), status=401, mimetype='application/json')
+            if not body:
+                return Response(ErroDTO(400, "O body da requisição não pode estra vazio!").dumps(), status=400, mimetype='application/json')
+            if 'login' not in body:
+                erros.append("É necessário que seja passado um login!")
+            if 'senha' not in body:
+                erros.append("É necessário que seja passada uma senha!")
+
+            if len(erros) > 0:
+                return Response(ErroDTO(400, erros).dumps(), status=400, mimetype='application/json')
+
+            usuario_encontrado = UsuarioService().login(body["login"], body["senha"])
+            print(usuario_encontrado)
+
+            if not usuario_encontrado:
+                return Response(ErroDTO(401, 'login ou senha incorreto').dumps(), status=401, mimetype='application/json')
+
+            token = JWTservice.gerar_token(usuario_encontrado.id)
+            return Response(UsuarioLoginDTO(usuario_encontrado.nome, usuario_encontrado.email, token).dumps(), status=200, mimetype='application/json')
         except Exception as ex:
             return Response(ErroDTO(500, "Não foi possível efetuar o login. Tente novamente!" + ex).dumps(), status=500, mimetype='application/json')
 
